@@ -1,7 +1,6 @@
 # Replication Code for: "A Joint Model for Multivariate Longitudinal Biomarkers and Survival Outcomes with a Fast Kalman Filter"
 
 **Authors:** Mingzhao Hu, Ya Luo, Yuedong Wang  
-**Journal:** Journal of the American Statistical Association (JASA)  
 **Data:** End-stage renal disease dialysis cohort, n = 5,707 subjects, 48 monthly visits
 
 ---

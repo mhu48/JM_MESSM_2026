@@ -63,3 +63,501 @@ gen_X.R
 llh_OU.R
 llh_OU_unitrt.R
 llh_survival_x_OU.R
+```
+
+The currently uploaded simulation RData files are:
+
+```text
+theta_est_mat.Rdata
+true_val.Rdata
+theta_mat_est_extra_final.Rdata
+par_est_df.Rdata
+```
+
+The repository also contains:
+
+```text
+bootstrap_results/results_m1000/
+```
+
+This folder is used only if individual bootstrap estimate files are present.
+
+---
+
+## Data Privacy Note
+
+The public repository does **not** include the restricted dialysis data objects needed for the real-data analysis.
+
+Do not publicly upload patient-level real-data files such as:
+
+```text
+albumin_data_0504.RData
+albumin_data_0509.RData
+data_split_in.Rdata
+z_in.Rdata
+X00_cube_in.Rdata
+A_list_in.Rdata
+AB_list_in.Rdata
+```
+
+Also treat the following real-data-derived fitted/bootstrap files as restricted unless cleared for public sharing:
+
+```text
+albumin_fit.RData
+theta_est_0613.RData
+boostrap_realdata_0613.RData
+theta_result_*.Rdata
+fit_joint_albumin_*.Rdata
+theta_fit_theta_result_3.RData
+theta_fit_fit_joint_albumin_8.RData
+restandardize_for_plot_0505.RData
+```
+
+The uploaded simulation objects
+
+```text
+theta_est_mat.Rdata
+true_val.Rdata
+theta_mat_est_extra_final.Rdata
+par_est_df.Rdata
+```
+
+are simulation summaries/parameter-estimate objects and should not contain patient-level real data, provided they are the simulation files used for Table S3.
+
+---
+
+## Required R Packages
+
+Install the following packages before running the scripts:
+
+```r
+install.packages(c(
+  "GA",
+  "data.table",
+  "dplyr",
+  "assist",
+  "foreach",
+  "doParallel",
+  "xtable",
+  "mvtnorm",
+  "clusterGeneration",
+  "magic",
+  "ggplot2",
+  "gridExtra",
+  "ggpubr",
+  "reshape2",
+  "survival",
+  "survminer",
+  "knitr",
+  "kableExtra",
+  "MASS",
+  "Rcpp",
+  "RcppArmadillo",
+  "inline"
+))
+```
+
+Not every package is needed for every script. For example, `sim_bootstrap_analysis.R` only requires `xtable`, while the real-data plotting script uses additional plotting and table-formatting packages.
+
+---
+
+## Real-Data Analysis Workflow
+
+The real-data scripts are included as a code archive. They require restricted data and precomputed fitted/bootstrap objects.
+
+---
+
+### 1. Optional starting-value script: `save_theta_trans.R`
+
+Run this only if the starting-value file is missing.
+
+```r
+source("save_theta_trans.R")
+```
+
+Expected input:
+
+```text
+albumin_data_0504.RData
+```
+
+Outputs:
+
+```text
+theta_trans_3_0504.RData
+theta_trans_est_0504.RData
+```
+
+The uploaded script loads `albumin_data_0504.RData`, extracts the preliminary fitted parameter vector from `fit_joint_albumin_1$par`, and saves the starting values used by the model-fitting script.
+
+---
+
+### 2. Main model fit: `albumin_fit.R`
+
+Run:
+
+```r
+source("albumin_fit.R")
+```
+
+Expected real-data inputs:
+
+```text
+data_split_in.Rdata
+z_in.Rdata
+X00_cube_in.Rdata
+A_list_in.Rdata
+AB_list_in.Rdata
+theta_trans_3_0504.RData
+theta_trans_3_0503.RData
+theta_trans_3_0502.RData
+theta_trans_1_0404.RData
+```
+
+Main outputs:
+
+```text
+albumin_fit.RData
+theta_est_0613.RData
+```
+
+This script loads the preprocessed real-data arrays, standardizes biomarkers/covariates, reconstructs alive/present subject lists, fits the joint model using `optim()`, and saves the fitted parameter vector on the natural scale.
+
+This script is part of the workflow for the population trend results in Figure 2, but the current public repository does not contain the restricted data and precomputed bootstrap outputs required to reproduce Figure 2.
+
+---
+
+### 3. Real-data bootstrap confidence intervals: `bootstrap_ci.R`
+
+Run:
+
+```r
+source("bootstrap_ci.R")
+```
+
+Expected real-data inputs include:
+
+```text
+data_split_in.Rdata
+z_in.Rdata
+X00_cube_in.Rdata
+A_list_in.Rdata
+AB_list_in.Rdata
+theta_trans_3_0504.RData
+theta_trans_3_0503.RData
+theta_trans_3_0502.RData
+theta_trans_1_0404.RData
+theta_est_0613.RData
+theta_result_1.Rdata
+...
+theta_result_38.Rdata
+boostrap_realdata_0613.RData
+```
+
+Important note: as uploaded, the first part of `bootstrap_ci.R` runs only batch `k = 38`, while the aggregation part expects all 38 files:
+
+```text
+theta_result_1.Rdata
+...
+theta_result_38.Rdata
+```
+
+Therefore, the script is not a one-click public rerun of the full real-data bootstrap unless the missing real-data bootstrap result files are provided or the batch loop is modified.
+
+This script is associated with:
+
+```text
+Table 2
+Table S4
+Figure S1
+```
+
+but these outputs are not reproducible from the current public repository alone.
+
+---
+
+### 4. Individual trajectory and mortality-probability plot: `albumin_plot.R`
+
+Run:
+
+```r
+source("albumin_plot.R")
+```
+
+Expected real-data inputs include:
+
+```text
+albumin_data_0509.RData
+theta_fit_theta_result_3.RData
+theta_fit_fit_joint_albumin_8.RData
+restandardize_for_plot_0505.RData
+filter_estimate_OU_withP.R
+```
+
+Main outputs:
+
+```text
+0509_6pt_3156.png
+0509_6pt_130_noCI_0904.pdf
+```
+
+The file
+
+```text
+0509_6pt_130_noCI_0904.pdf
+```
+
+corresponds to Figure 3 in the manuscript.
+
+The script also contains a final participant-characteristics table block. That block requires objects such as:
+
+```text
+base
+albumin_data_9
+```
+
+to be available in the workspace or loaded through the restricted real-data file. This block is associated with Table S1, but Table S1 is not reproducible from the current public files alone.
+
+Figure 1 is not generated by the uploaded `albumin_plot.R`; the script itself notes that Figure 1 is a raw-data plot generated separately.
+
+---
+
+## Simulation and Computational Analysis
+
+The simulation/computational portion is the part of the repository that is currently closest to public replication.
+
+---
+
+### Table S2: Filtering-Time Comparison
+
+Run:
+
+```r
+source("filter_time_comparison.R")
+```
+
+This script uses:
+
+```text
+llh_OU.R
+llh_OU_unitrt.R
+```
+
+and simulates data internally for the filtering-time comparison.
+
+Outputs are saved under:
+
+```text
+filter_time_results/filter_time.Rdata
+filter_time_results/filter_time_unitrt.Rdata
+```
+
+The script also prints a LaTeX table using `xtable`. This corresponds to Table S2.
+
+---
+
+### Table S3: Simulation MSE, Bias, Variance, and Bootstrap Coverage
+
+Run:
+
+```r
+source("sim_bootstrap_analysis.R")
+```
+
+The script expects these two files under:
+
+```text
+data/results_m1000/
+```
+
+Specifically:
+
+```text
+data/results_m1000/theta_est_mat.Rdata
+data/results_m1000/true_val.Rdata
+```
+
+The current GitHub upload lists these files in the repository root. To run the script without editing it, first run:
+
+```r
+dir.create("data/results_m1000", recursive = TRUE, showWarnings = FALSE)
+
+file.copy(
+  "theta_est_mat.Rdata",
+  "data/results_m1000/theta_est_mat.Rdata",
+  overwrite = TRUE
+)
+
+file.copy(
+  "true_val.Rdata",
+  "data/results_m1000/true_val.Rdata",
+  overwrite = TRUE
+)
+```
+
+Then run:
+
+```r
+source("sim_bootstrap_analysis.R")
+```
+
+This script also reads:
+
+```text
+theta_mat_est_extra_final.Rdata
+```
+
+from the repository root.
+
+Outputs are saved under:
+
+```text
+analysis_results/par_est_df.Rdata
+analysis_results/par_est_boot_df.Rdata
+```
+
+and the corresponding LaTeX tables are printed to the console.
+
+These outputs correspond to Table S3.
+
+---
+
+## Simulation Bootstrap Files
+
+### Exact archived object for Table S3
+
+The key object for reproducing Table S3 is:
+
+```text
+theta_mat_est_extra_final.Rdata
+```
+
+This is the archived final bootstrap object used for the reported bootstrap coverage calculation.
+
+A fresh run of `sim_bootstrap_gen.R` should not be expected to recreate the exact historical bootstrap object.
+
+---
+
+### `sim_bootstrap_collect.R`
+
+This script collects 100 individual bootstrap estimate files into one list object.
+
+It expects:
+
+```text
+bootstrap_results/results_m1000/theta_est_mat1.Rdata
+bootstrap_results/results_m1000/theta_est_mat2.Rdata
+...
+bootstrap_results/results_m1000/theta_est_mat100.Rdata
+```
+
+and saves:
+
+```text
+theta_mat_est_extra_final.Rdata
+```
+
+This script is optional if `theta_mat_est_extra_final.Rdata` is already present.
+
+---
+
+### `sim_bootstrap_gen.R`
+
+This script documents the standardized bootstrap-generation procedure for the simulation bootstrap.
+
+It requires files that are **not currently included** in the public repository, including:
+
+```text
+y_list.Rdata
+z_list.Rdata
+X00_cube_in_list.Rdata
+A_list.Rdata
+AB_list.Rdata
+MSE_fix_mat.Rdata
+```
+
+These files were removed from the public repository, so `sim_bootstrap_gen.R` is retained only as documentation of the bootstrap-generation procedure.
+
+For exact Table S3 replication, use:
+
+```text
+theta_mat_est_extra_final.Rdata
+```
+
+with `sim_bootstrap_analysis.R`.
+
+---
+
+## Current Public Replication Status
+
+### Reproducible from public files
+
+The following outputs are reproducible from the current public repository, with the path adjustment noted above for Table S3:
+
+```text
+Table S2
+Table S3
+```
+
+Run:
+
+```r
+source("filter_time_comparison.R")
+```
+
+and:
+
+```r
+dir.create("data/results_m1000", recursive = TRUE, showWarnings = FALSE)
+file.copy("theta_est_mat.Rdata", "data/results_m1000/theta_est_mat.Rdata", overwrite = TRUE)
+file.copy("true_val.Rdata", "data/results_m1000/true_val.Rdata", overwrite = TRUE)
+source("sim_bootstrap_analysis.R")
+```
+
+### Not reproducible from current public files alone
+
+The following outputs require restricted real-data objects or precomputed real-data fit/bootstrap files:
+
+```text
+Figure 1
+Figure 2
+Figure 3
+Table 2
+Table S1
+Table S4
+Figure S1
+Figure S2
+```
+
+The corresponding scripts are included where available, but the necessary real-data RData files are not publicly uploaded.
+
+---
+
+## Recommended Real-Data Replication Commands
+
+For authorized users with the restricted real-data bundle, place the required real-data and precomputed fit/bootstrap files in the repository root and run:
+
+```r
+source("save_theta_trans.R")   # optional; only if theta_trans_3_0504.RData is missing
+source("albumin_fit.R")
+source("bootstrap_ci.R")
+source("albumin_plot.R")
+```
+
+Depending on which precomputed files are available, users may skip the long fitting or bootstrap steps and run only the plotting/table-generation portions.
+
+---
+
+## Reproducibility Notes
+
+1. Run scripts from the repository root unless paths are edited manually.
+
+2. File extensions are case-sensitive on Mac and Linux. For example, `.RData` and `.Rdata` are different.
+
+3. The real-data scripts require restricted patient-level RData files that are not included publicly.
+
+4. `sim_bootstrap_gen.R` is a procedural/bootstrap-generation script and cannot be rerun from the current public repository because the required simulation-list objects have been removed.
+
+5. Exact replication of Table S3 uses `theta_mat_est_extra_final.Rdata`.
+
+6. The filtering-time comparison in `filter_time_comparison.R` may take substantial time for large sample sizes.

@@ -1,6 +1,6 @@
 # Replication Code for: "A Joint Model for Multivariate Longitudinal Biomarkers and Survival Outcomes with a Fast Kalman Filter"
 
-**Authors:** Mingzhao Hu, Ya Luo, Yuedong Wang
+**Authors:** Ya Luo, Mingzhao Hu, Yuedong Wang
 
 ---
 
